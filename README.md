@@ -26,7 +26,7 @@ A node.js server for the aliwa wallet
   
   let password= 
   
-  var read_block_height= //(0 for sync from 0, or higher value for testing)
+  var read_block_height= //(0 for sync from block 0 or a higher value for quick testing)
 
 10.modify database.js (as in your mariadb database)
 
