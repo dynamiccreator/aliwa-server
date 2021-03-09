@@ -36,7 +36,7 @@ A node.js server for the aliwa wallet
   
   database: 'aliwa_server',
   
-11. install node.js (v>=12)  
+11. install node.js (v>=12 important)  
 
 12. run: npm install in this folder
 
