@@ -3,7 +3,7 @@ A node.js server for the aliwa wallet
 
 # Documentation (linux)
 
-1.Have an Alias wallet (gui/rpc) fully synced (wallet from https://alias.cash)
+1.Have an Alias wallet (gui/rpc) fully synced (wallet from https://alias.cash or https://github.com/aliascash/alias-wallet)
 
 2.Modify rpcuser and rpcpassword in the alias.conf file
 
