@@ -10,7 +10,7 @@ A node.js server for the aliwa wallet
 3.copy alias.conf file into .aliaswallet folder and restart the wallet afterwards
 
 
-4.(optional) test it with curl functionality with: curl --data-binary '{"jsonrpc": "1.0", "id":"curltest", "method": "getblockcount", "params":[] }' -H 'content-type: text/plain;' http://user:password@127.0.0.1:36657/ (adapt user and password ;) )
+4.(optional) test it with curl: curl --data-binary '{"jsonrpc": "1.0", "id":"curltest", "method": "getblockcount", "params":[] }' -H 'content-type: text/plain;' http://user:password@127.0.0.1:36657/ (adapt user and password ;) )
 
 5.install mariadb or -->6.
 
