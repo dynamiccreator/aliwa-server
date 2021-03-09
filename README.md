@@ -35,7 +35,9 @@ A node.js server for the aliwa wallet
   password: 'password',
   
   database: 'aliwa_server',
+  
+11. install node.js (v>=12)  
 
-11. run npm install in this folder
+12. run: npm install in this folder
 
-12. run node main_sever.js
+13. run: node main_sever.js
