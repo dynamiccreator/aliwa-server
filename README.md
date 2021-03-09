@@ -20,7 +20,7 @@ A node.js server for the aliwa wallet
 
 8.import aliwa_server.sql to the database
 
-9.modify main_server.js:
+9.modify main_server.js (as in alias.conf):
 
   let username= 
   
@@ -28,7 +28,7 @@ A node.js server for the aliwa wallet
   
   var read_block_height= //(0 for sync from 0, or higher value for testing)
 
-10.modify database.js
+10.modify database.js (as in your mariadb database)
 
   user: 'user',
   
