@@ -3,6 +3,8 @@ var read_block_height=0;
 
 const request = require('request');
 const util = require('util');
+
+require("./config.js")();
 var database = require('./database');
 var alias_database= new database.alias_database();
 
@@ -10,20 +12,21 @@ var events = require('events');
 var eventEmitter = new events.EventEmitter();
 
 
-// User and password specified like so: node index.js username password.
-let username = "username";
-let password = "password";
+
+let username = cnf_username;
+let password = cnf_password;
+
 
 
 var counter=0;
 var current_block_height=0;
 
-var read_block_height=1700000;//1747000;//1700000;//1700000;//1710000;
+var read_block_height=cnf_read_block_height;//1747000;//1700000;//1700000;//1710000;
 
 var process_read_blocks=false;
 var process_rewind_blocks=false;
 var accept_new_syncing_wallet=false;
-var process_syncing_to_wallets={};
+var process_syncing_to_wallets_array={};
 
 var startup=true;
 
@@ -47,22 +50,23 @@ var mainloop =  async function () {
    }
    
    
-   if(Object.keys(process_syncing_to_wallets).length>0){
-       accept_new_syncing_wallet=false;
+   if(Object.keys(process_syncing_to_wallets_array).length>0){
+       
        setTimeout(function(){
             eventEmitter.emit('next');
        },500);
+       return;
    }else{
         request_rpc("getblockcount",null,"getblockcount");
    }
    
 
   
-  //main running every 30 sec
+  //main running every 15 sec
   console.log("log main: "+new Date().toLocaleString());
     setTimeout(function(){
         eventEmitter.emit('next');
-    },30000);
+    },15000);
 }
 
 //Assign the event handler to an event:
@@ -75,14 +79,15 @@ eventEmitter.emit('next');
 //**********************************************
 //start the server for light wallet
 
-const io = require('socket.io')(3000);
+const io = require('socket.io')(3000,{pingTimeout: 20000, pingInterval: 5000});
 
 io.on('connection', socket => {
   var address_list=[];  
     
    //this will be replaced by the POW Ddos token when switched to TOR 
-  var address = socket.handshake.address;
-  console.log('New connection from ' + address.address + ':' + address.port);
+  var socket_id = socket.id;
+//  console.log(socket);
+  console.log('New connection ID: ' + socket_id);
     
   // either with send()
   socket.send('You\'re connected to the Aliwa server.');
@@ -96,9 +101,10 @@ io.on('connection', socket => {
   socket.on('sync_from', async (from,list,last_rewind) =>  {
       address_list=list;
        if(accept_new_syncing_wallet){         
-//          process_syncing_to_wallets[address.address]=1;
+          process_syncing_to_wallets_array[socket_id]=1; //server can not sync while array not empty
           setTimeout(function(){
-//              delete process_syncing_to_wallets[address.address]; //guarantee deleting after 5 seconds
+              if(process_syncing_to_wallets_array[socket_id]!=undefined){
+              delete process_syncing_to_wallets_array[socket_id];} //guarantee deleting after 5 seconds
               } 
           ,5000);
           
@@ -130,6 +136,9 @@ io.on('connection', socket => {
             console.log("not accepted - waiting for server sync");
             socket.emit("server_respond_sync_data",{message:"wait for syncing"});
         }
+        //delete to allow server sync again 
+        if(process_syncing_to_wallets_array[socket_id]!=undefined){
+              delete process_syncing_to_wallets_array[socket_id];}
        
   });
   
@@ -145,11 +154,13 @@ io.on('connection', socket => {
     
     socket.on("disconnect",function(){
         clearInterval(mempool_interval);
+        address_list=undefined;
+        console.log("client ["+socket_id+"] disconnected");
     });
     
-    socket.on("send_raw_tx",function(raw_tx){
+    socket.on("send_raw_tx",function(raw_tx,tx_object){
         console.log("NEW TRANSACTION INCOMING: "+raw_tx);
-        request_rpc("sendrawtransaction",raw_tx,"socket_event",socket);
+        request_rpc("sendrawtransaction",raw_tx,"socket_event",socket,tx_object);
     });
 });
 
@@ -160,7 +171,7 @@ io.on('connection', socket => {
  * ***********************************
  */
 
-function request_rpc(method,params,event,socket) {
+function request_rpc(method,params,event,socket,socket_data) {
     let  options = {
         url: "http://127.0.0.1:36657",
         method: "post",
@@ -188,7 +199,7 @@ function request_rpc(method,params,event,socket) {
 //            console.log("request method: " + method+" | "+params);
 //            console.log('Post successful: body: ', body);
             if(socket!=undefined){
-                socket.emit("server_respond_send_raw_tx",{message:body});
+                socket.emit("server_respond_send_raw_tx",{message:body,data:socket_data});
                 return;
             }
             eventEmitter.emit(event,false,body);
@@ -213,6 +224,7 @@ var set_current_blockheight= function(error,data){
     
     if(process_read_blocks==false && read_block_height<=current_block_height && process_rewind_blocks==false){
         process_read_blocks=true;
+        accept_new_syncing_wallet=false;
         request_rpc("getblockbynumber",[read_block_height,true],"getblockbynumber");
     }else if(process_read_blocks==false && read_block_height>current_block_height && process_rewind_blocks==false)
     {accept_new_syncing_wallet=true;}
@@ -352,3 +364,4 @@ async function get_blockhash_by_blockheight(list){
     return result;
         
 }
+

@@ -8,9 +8,9 @@ class alias_database {
         this.mariadb = require('mariadb');
         this.pool = this.mariadb.createPool({
             host: 'localhost',
-            user: 'user',
-            password: 'password',
-            database: 'aliwa_server',
+            user: cnf_db_user,
+            password: cnf_db_password,
+            database: cnf_db_database,
             connectionLimit: 128
         });
     }
