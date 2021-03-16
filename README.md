@@ -11,7 +11,7 @@ A node.js server for the aliwa wallet
 
 * Maria DB
 
-* (optional) LAMP with phpmyadmin or another gui tool for look up or managing the database conviently if neccessarry
+* (optional) LAMP with phpmyadmin or another gui tool for look up or managing the database conviently if neccessary
 
 
 ### Steps
