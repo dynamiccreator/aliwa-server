@@ -20,7 +20,7 @@ A node.js server for the aliwa wallet
 
 2.Copy alias.conf file into .aliaswallet folder and restart the wallet afterwards
 
-3.(optional) test it with curl: curl --data-binary '{"jsonrpc": "1.0", "id":"curltest", "method": "getblockcount", "params":[] }' -H 'content-type: text/plain;' http://user:password@127.0.0.1:36657/ (adapt user and password ;) )
+3.(optional) test it with curl: `curl --data-binary '{"jsonrpc": "1.0", "id":"curltest", "method": "getblockcount", "params":[] }' -H 'content-type: text/plain;' http://user:password@127.0.0.1:36657/` (adapt user and password ;) )
 
 3.Modify rpcuser and rpcpassword in the alias.conf file
 
