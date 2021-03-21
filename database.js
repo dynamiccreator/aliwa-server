@@ -329,6 +329,8 @@ class alias_database {
                 found=true;
                 select_outputs_extern_query+="?,";
                 select_outputs_extern_array.push(inputs[i].tx);
+                select_outputs_extern_query+="?,";
+                select_outputs_extern_array.push(inputs[i].from_tx);
             }
             
             select_outputs_extern_query=select_outputs_extern_query.substring(0,select_outputs_extern_query.length-1)+") OR tx IN (SELECT tx FROM tx_outputs WHERE to_address IN (";
