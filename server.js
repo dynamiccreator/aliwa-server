@@ -1,6 +1,3 @@
-var current_block_height=0;
-var read_block_height=0;
-
 const request = require('request');
 const util = require('util');
 
@@ -21,7 +18,7 @@ let password = cnf_password;
 var counter=0;
 var current_block_height=0;
 
-var read_block_height=cnf_read_block_height;//1747000;//1700000;//1700000;//1710000;
+var read_block_height=cnf_read_block_height;
 
 var process_read_blocks=false;
 var process_rewind_blocks=false;
@@ -41,12 +38,19 @@ var rewind_list=[];
 var mainloop =  async function () {
    //sync
    if(startup){
+    startup=false;   
     var db_height=await alias_database.get_current_db_blockheight();
     console.log(db_height);
     if(db_height!=undefined){read_block_height=db_height.blockheight+1;} // +1 do not read twice 
     console.log(read_block_height);
     rewind_list= await alias_database.get_rewinds(); //set rewind array
-    startup=false;
+    //initial rewind check
+    process_read_blocks=false;        
+    process_rewind_blocks= true;
+    orphan_read_start = read_block_height - 1000 - 1;
+    orphan_read_current = orphan_read_start;
+    orphan_read_end = read_block_height - 1;
+    rewind_blocks_check();       
    }
    
    
