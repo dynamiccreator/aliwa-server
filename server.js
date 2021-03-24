@@ -41,7 +41,8 @@ var mainloop =  async function () {
     startup=false;   
     var db_height=await alias_database.get_current_db_blockheight();
     console.log(db_height);
-    if(db_height!=undefined){read_block_height=db_height.blockheight+1; // +1 do not read twice 
+    if(db_height!=undefined){
+       read_block_height=db_height.blockheight+1; // +1 do not read twice 
        console.log(read_block_height);
        rewind_list= await alias_database.get_rewinds(); //set rewind array
        //initial rewind check
