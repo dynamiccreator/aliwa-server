@@ -41,18 +41,17 @@ var mainloop =  async function () {
     startup=false;   
     var db_height=await alias_database.get_current_db_blockheight();
     console.log(db_height);
-    if(db_height!=undefined){
-       read_block_height=db_height.blockheight+1; // +1 do not read twice 
-       console.log(read_block_height);
-       rewind_list= await alias_database.get_rewinds(); //set rewind array
-       //initial rewind check
-       process_read_blocks=false;        
-       process_rewind_blocks= true;
-       orphan_read_start = read_block_height - 1000 - 1;
-       orphan_read_current = orphan_read_start;
-       orphan_read_end = read_block_height - 1;
-       rewind_blocks_check();
-      }
+    if(db_height!=undefined){read_block_height=db_height.blockheight+1; // +1 do not read twice 
+        console.log(read_block_height);
+        rewind_list= await alias_database.get_rewinds(); //set rewind array
+        //initial rewind check
+        process_read_blocks=false;        
+        process_rewind_blocks= true;
+        orphan_read_start = read_block_height - 1000 - 1;
+        orphan_read_current = orphan_read_start;
+        orphan_read_end = read_block_height - 1;
+        rewind_blocks_check(); 
+    }
    }
    
    
@@ -114,12 +113,17 @@ io.on('connection', socket => {
               } 
           ,5000);
           
-         var result={}; 
-         if(last_rewind < ((Date.now()/1000))- (179*24*3600)){ //last sync/rewind older than 180 days --> sync from 0
+         var result={};
+         if(last_rewind==null || last_rewind==undefined){last_rewind={time:0};}
+         if(last_rewind.time < ((Date.now()/1000))- (179*24*3600)){ //last sync/rewind older than 180 days --> sync from 0
             result = await get_tx_data_by_addresses(0,list);
             result.from=0;
             result.to=read_block_height-1;
-            result.last_rewind=rewind_list[rewind_list.length-1];
+            if(rewind_list!=null && rewind_list.length>0){
+            result.last_rewind=rewind_list[rewind_list.length-1];}
+            else{
+                result.last_rewind={time:(Date.now()/1000),block_height:read_block_height-1};
+            }
          } 
          else{
              var new_rewind={time:last_rewind.time,block_height:last_rewind.block_height};
@@ -370,4 +374,3 @@ async function get_blockhash_by_blockheight(list){
     return result;
         
 }
-
