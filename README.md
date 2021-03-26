@@ -34,4 +34,4 @@ A node.js server for the aliwa wallet
 
 9.`npm install` (in this folder)
 
-9.`node server.js` (in this folder)
+10.`node server.js` (in this folder)
