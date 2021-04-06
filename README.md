@@ -22,15 +22,11 @@ A node.js server for the aliwa wallet
 
 3.(optional) test it with curl: `curl --data-binary '{"jsonrpc": "1.0", "id":"curltest", "method": "getblockcount", "params":[] }' -H 'content-type: text/plain;' http://user:password@127.0.0.1:36657/` (adapt user and password ;) )
 
-4.Modify rpcuser and rpcpassword in the alias.conf file
+4. Add a mariadb database with user and password
 
-5.Copy alias.conf file into .aliaswallet folder and restart the wallet afterwards
+5. Import aliwa_server.sql to the database
 
-6.Add a mariadb database with user and password
-
-7.Import aliwa_server.sql to the database
-
-8.Modify config.js (user,password etc.)
+6. Modify config.js (user,password etc.)
 
 9.`npm install` (in this folder)
 
