@@ -28,6 +28,6 @@ A node.js server for the aliwa wallet
 
 6. Modify config.js (user,password etc.)
 
-7. `npm install` (in this folder)
+7. `npm install` (repository folder)
 
-8. `node server.js` (in this folder)
+8. `node server.js` (repository folder)
