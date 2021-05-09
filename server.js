@@ -85,7 +85,7 @@ eventEmitter.emit('next');
 //**********************************************
 //start the server for light wallet
 
-const io = require('socket.io')(3000,{pingTimeout: 20000, pingInterval: 5000});
+const io = require('socket.io')(3000,{pingTimeout: 20000, pingInterval: 2500});
 
 io.on('connection', socket => {
   var address_list=[];  
@@ -104,7 +104,7 @@ io.on('connection', socket => {
   });
 
   // handle the event sent with socket.emit()
-  socket.on('sync_from', async (from,list,last_rewind) =>  {
+  socket.on('sync_from', async (from,list,last_rewind,sync_id) =>  {
       address_list=list;
        if(accept_new_syncing_wallet){         
           process_syncing_to_wallets_array[socket_id]=1; //server can not sync while array not empty
@@ -144,7 +144,7 @@ io.on('connection', socket => {
                 result.last_rewind={time:(Date.now()/1000),block_height:read_block_height-1};
             }
          }
-         
+        result.sync_id=sync_id;
         socket.emit("server_respond_sync_data",result);       
         }
         else{
