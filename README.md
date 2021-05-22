@@ -4,7 +4,7 @@ A node.js server for the aliwa wallet
 ## Documentation (linux)
 
 ### Requirements
-* Server with at least 4GB RAM, 50GB+ disk recommended (more disk is better when blockchain size increases)
+* Server with at least 4GB RAM, 50GB+ disk recommended (more disk space is better when blockchain size increases)
 
 * Alias wallet (gui or rpc) fully synced (wallet from https://alias.cash or https://github.com/aliascash/alias-wallet)
 
