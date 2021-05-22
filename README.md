@@ -26,7 +26,7 @@ A node.js server for the aliwa wallet
 
 3. (optional) test it with curl: `curl --data-binary '{"jsonrpc": "1.0", "id":"curltest", "method": "getblockcount", "params":[] }' -H 'content-type: text/plain;' http://user:password@127.0.0.1:36657/` (adapt user and password ;) )
 
-4. Add a mariadb database with user and password
+4. Add a mariadb database (innoDB) with user and password
 
 5. Import aliwa_server.sql to the database
 
