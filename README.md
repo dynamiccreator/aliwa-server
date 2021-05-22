@@ -12,7 +12,7 @@ A node.js server for the aliwa wallet
 
 * Maria DB
   * For optimal performance set ram usage to at least 500MB
-    * Set `innodb_buffer_pool_size = 536870912` (or bigger) in mariadb.cnf 
+    * Add `innodb_buffer_pool_size = 536870912` (or bigger) in mariadb.cnf 
     * Verify ram usage with  `SELECT variable_value FROM information_schema.global_variables WHERE variable_name = 'innodb_buffer_pool_size';`
 
 * (optional) LAMP with phpmyadmin or another gui tool for look up or managing the database conviently if neccessary
