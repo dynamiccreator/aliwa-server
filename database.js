@@ -283,7 +283,7 @@ class alias_database {
             var select_outputs_array=[];
             
             for(var i=0;i<list.length;i++){
-                found=true
+                found=true;
                 select_outputs_query+="?,";
                 select_outputs_array.push(list[i]);
             }
@@ -309,21 +309,28 @@ class alias_database {
                 select_inputs_query+="?,";
                 select_inputs_array.push(outputs[i].tx);
             }
-            select_inputs_query=select_inputs_query.substring(0,select_inputs_query.length-1)+") OR tx IN (SELECT tx FROM tx_inputs WHERE from_tx IN (";
+            select_inputs_query=select_inputs_query.substring(0,select_inputs_query.length-1)+") OR (from_tx IN (";
             
-            for(var i=0;i<outputs.length;i++){               
+            for(var i=0;i<outputs.length;i++){
+                       select_inputs_query+="?,";
+                       select_inputs_array.push(outputs[i].tx);
+                   } 
+                
+            select_inputs_query=select_inputs_query.substring(0,select_inputs_query.length-1)+") AND tx IN (";
+            for(var i=0;i<outputs.length;i++){
+                found=true;
                 select_inputs_query+="?,";
                 select_inputs_array.push(outputs[i].tx);
-            }
-                                
-            select_inputs_query=select_inputs_query.substring(0,select_inputs_query.length-1)+"))) AND create_height>=?;";
+            }        
+                    
+            select_inputs_query=select_inputs_query.substring(0,select_inputs_query.length-1)+")) ) AND create_height>=?;";
             select_inputs_array.push(from);
             
             if(found){
             query_count++;
             inputs= await conn.query(select_inputs_query,select_inputs_array);}
             found=false;
-                    
+            
             
             //outputs_extern
            var select_outputs_extern_query="SELECT * FROM tx_outputs WHERE (tx IN (";
@@ -361,7 +368,7 @@ class alias_database {
             found=false;
               
             //inputs extern
-            var select_inputs_extern_query="SELECT * FROM tx_inputs WHERE (tx IN (";
+       /*     var select_inputs_extern_query="SELECT * FROM tx_inputs WHERE (tx IN (";
             var select_inputs_extern_array=[];
             for(var i=0;i<outputs.length;i++){
                 found=true;
@@ -382,20 +389,20 @@ class alias_database {
             query_count++;    
             var inputs_extern= await conn.query(select_inputs_extern_query,select_inputs_extern_array);          
             inputs=inputs_extern;
-            }
+            }*/
             
             //remove meta
             inputs = inputs.filter(item => item !== "meta");
             outputs = outputs.filter(item => item !== "meta");
             
             //remove outputs smaller than from and self tx       
-            for(var i=outputs.length-1;i>=0;i--){ //reverse order to not mess up indices                
+            for(var i=outputs.length-1;i>=0;i--){ //reverse order to not mess up indices 
                 if(outputs[i].create_height<from){
                     for(var j=0;j<outputs_self_tx.length;j++){
                         if(outputs[i].tx==outputs_self_tx[j].tx){
                         outputs.splice(i,1);break;}
                     }                                    
-                }
+            }
             }
               
             console.log("query_count: "+query_count);

@@ -33,6 +33,17 @@ var orphan_read_current=-1;
 var orphan_read_end=-1;
 var rewind_list=[];
 
+//mempool
+var global_mempool_reading=false;
+var global_mempool_ids=[];
+var global_mempool_output_list=[];
+var global_mempool_output_list_string="";
+
+var global_mempool_i=0;
+var global_mempool_j=0;
+
+//currencies/Alias
+var alias_prices=null;
 
 //Create an event handler:
 var mainloop =  async function () {
@@ -81,6 +92,95 @@ eventEmitter.on('next', mainloop);
 eventEmitter.emit('next');
 
 
+//mempool read interval
+var read_raw_mempool = function (error, data) {
+    if(error){
+        console.error("Could not read mempool!");
+        global_mempool_reading=false;
+        return;
+    }
+    try {
+//        console.log("read_raw_mempool: ", data);
+        var j_dat = JSON.parse(data);
+        global_mempool_ids=j_dat.result;
+//        console.log(global_mempool_ids);
+        
+        global_mempool_i=0;
+        global_mempool_j=0;
+        global_mempool_output_list=[];
+        
+        if(global_mempool_ids!=null && global_mempool_i<global_mempool_ids.length){
+            request_rpc("gettxout",[global_mempool_ids[global_mempool_i],global_mempool_j,true],"event_read_next_mempool_output");
+        }
+        else{
+             global_mempool_reading=false;
+        }
+    } catch (e) {
+        console.error(e);
+        global_mempool_reading=false;
+    }
+} 
+
+var read_next_mempool_output = function (error, data) {
+    try {
+        if (error) {
+            console.error("Could not read mempool OUTPUT" + global_mempool_i + "/" + global_mempool_j + "!");
+            global_mempool_reading = false;
+            return;
+        }
+        var j_dat = JSON.parse(data);
+        var res=j_dat.result;
+//        console.log(res);
+        if(res!=null){         
+            res.tx=global_mempool_ids[global_mempool_i];
+            res.num=global_mempool_j;
+            if (res.value == 0 && res.scriptPubKey.hex.startsWith("6a026e706a") && global_mempool_output_list.length>0){
+                if(global_mempool_output_list[global_mempool_output_list.length-1].scriptPubKey.addresses!=undefined){
+                res.scriptPubKey.addresses=global_mempool_output_list[global_mempool_output_list.length-1].scriptPubKey.addresses;}
+            }
+                       
+            global_mempool_output_list.push(res);
+            global_mempool_j++;
+        }
+        else{
+            global_mempool_i++;
+             global_mempool_j=0;
+        }
+
+        
+        if (global_mempool_i < global_mempool_ids.length) {
+            request_rpc("gettxout",[global_mempool_ids[global_mempool_i],global_mempool_j,true],"event_read_next_mempool_output");
+        } else {
+//            console.log("global_mempool_output_list:\n",global_mempool_output_list);  
+            global_mempool_output_list_string=JSON.stringify(global_mempool_output_list);
+            global_mempool_reading = false;
+        }
+
+    } catch (e) {
+        console.error(e);
+        global_mempool_reading = false;
+    }
+}
+
+
+eventEmitter.on('event_read_raw_mempool', read_raw_mempool);
+eventEmitter.on('event_read_next_mempool_output', read_next_mempool_output);
+
+//mempool interval
+setInterval(async function(){
+    if(!global_mempool_reading && !process_read_blocks && !process_rewind_blocks){      
+        global_mempool_reading=true;       
+        request_rpc("getrawmempool",null,"event_read_raw_mempool");
+    }    
+},500);
+
+//
+if (cnf_get_alias_prices) {
+    set_alias_prices();
+    setInterval(async function () {      
+        set_alias_prices();
+    }, (180 * 1000));
+}
 
 //**********************************************
 //start the server for light wallet
@@ -145,6 +245,8 @@ io.on('connection', socket => {
             }
          }
         result.sync_id=sync_id;
+        result.alias_prices=alias_prices;
+        result.server_donation_address=cnf_donation_address;
         socket.emit("server_respond_sync_data",result);       
         }
         else{
@@ -156,16 +258,40 @@ io.on('connection', socket => {
               delete process_syncing_to_wallets_array[socket_id];}
        
   });
-  
+    var last_mempool_string="";
     var mempool_interval= setInterval(async function(){
-        //compare with address_list first
-        //...
-        for(var i=0,len=address_list.length;i<len;i++){
-            //if.....
+        
+        //global mempool changed?
+        if (last_mempool_string != global_mempool_output_list_string) {
+            last_mempool_string = global_mempool_output_list_string;
+
+            var mempool_output = [];
+            for (var i = 0; i < global_mempool_output_list.length; i++) {
+                if (global_mempool_output_list[i].scriptPubKey != undefined && global_mempool_output_list[i].scriptPubKey != null)
+                {
+//                    console.log(global_mempool_output_list[i].scriptPubKey.addresses);
+                    if (global_mempool_output_list[i].scriptPubKey.addresses != undefined && global_mempool_output_list[i].scriptPubKey.addresses != null && global_mempool_output_list[i].scriptPubKey.addresses.length > 0)
+                    {
+                        for (var j = 0, len = address_list.length; j < len; j++) {
+                            if (address_list[j] == global_mempool_output_list[i].scriptPubKey.addresses[0]) {
+                                mempool_output.push(global_mempool_output_list[i]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if(mempool_output.length>0){
+//                console.log("mempool_output:\n",mempool_output);
+                socket.emit("server_mempool_txs", {message: mempool_output});              
+            }
+            
         }
-        var mempool_output=[];
+        
+        
+                       
 //        console.log("mempool push @ "+new Date().toLocaleString());
-    },3000);
+    },1500);
     
     socket.on("disconnect",function(){
         clearInterval(mempool_interval);
@@ -219,6 +345,30 @@ function request_rpc(method,params,event,socket,socket_data) {
             }
             eventEmitter.emit(event,false,body);
 //          console.log('Post successful: response: ', response);
+        }
+    });
+
+}
+
+function set_alias_prices() {
+    let  options = {
+        url: "https://api.coingecko.com/api/v3/simple/price?ids=spectrecoin&vs_currencies=btc%2Ceth%2Cltc%2Cbch%2Cbnb%2Ceos%2Cxrp%2Cxlm%2Clink%2Cdot%2Cyfi%2Cusd%2Caed%2Cars%2Caud%2Cbdt%2Cbhd%2Cbmd%2Cbrl%2Ccad%2Cchf%2Cclp%2Ccny%2Cczk%2Cdkk%2Ceur%2Cgbp%2Chkd%2Chuf%2Cidr%2Cils%2Cinr%2Cjpy%2Ckrw%2Ckwd%2Clkr%2Cmmk%2Cmxn%2Cmyr%2Cngn%2Cnok%2Cnzd%2Cphp%2Cpkr%2Cpln%2Crub%2Csar%2Csek%2Csgd%2Cthb%2Ctry%2Ctwd%2Cuah%2Cvef%2Cvnd%2Czar%2Cxdr%2Cxag%2Cxau%2Cbits%2Csats",
+        method: "get",
+        headers:
+                {
+                    "content-type": "application/json"
+                }
+    };
+
+     request(options, (error, response, body) => {
+        if (error) {           
+            console.error('An error has occurred: ', error);          
+           
+        } else { 
+            console.log("set alias_prices",body);
+            var result=JSON.parse(body);
+            if(result.spectrecoin!=null){alias_prices=result.spectrecoin;}
+                    
         }
     });
 
@@ -306,6 +456,19 @@ async function write_block(data){
 }
 
 async function rewind_blocks_check(){
+    //don't rewind bewlow 0
+    if(orphan_read_current<0){      
+        compare_blocks=[];
+        orphan_read_start= -1;
+        orphan_read_current = -1;
+        orphan_read_end = -1;
+                       
+        process_rewind_blocks=false;
+        accept_new_syncing_wallet=true;
+        
+        return;
+    }
+            
     if(orphan_read_current<=orphan_read_end){
         request_rpc("getblockbynumber",[orphan_read_current,true],"fill_compare_blocks");
     }
