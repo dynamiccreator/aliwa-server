@@ -8,6 +8,11 @@ module.exports = function () {
      cnf_db_user="";
      cnf_db_password="";
      cnf_db_database="";
+     
+     //load prices from coingecko
+     cnf_get_alias_prices=true;
+     //define a donation address shown in user's wallet
+     cnf_donation_address="server donation address";
 };
 
 
