@@ -45,6 +45,8 @@ var global_mempool_j=0;
 //currencies/Alias
 var alias_prices=null;
 
+var request_error_counter=0;
+
 //Create an event handler:
 var mainloop =  async function () {
    //sync
@@ -336,7 +338,12 @@ function request_rpc(method,params,event,socket,socket_data) {
                 return;
             }
             eventEmitter.emit(event,true,error);
+            request_error_counter++;
+            if(request_error_counter>2){
+                process.exit();
+            }
         } else { 
+            request_error_counter=0;
 //            console.log("request method: " + method+" | "+params);
 //            console.log('Post successful: body: ', body);
             if(socket!=undefined){
@@ -444,9 +451,9 @@ async function write_block(data){
     if(read_block_height<=current_block_height){
         request_rpc("getblockbynumber",[read_block_height,true],"getblockbynumber");}
     else{
-        
-        process_read_blocks=false;        
+               
         process_rewind_blocks=true;  
+        process_read_blocks=false;              
         orphan_read_start=current_block_height-1000;
         orphan_read_current=orphan_read_start;
         orphan_read_end=current_block_height;
