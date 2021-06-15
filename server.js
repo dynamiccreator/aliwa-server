@@ -454,7 +454,7 @@ async function write_block(data){
                
         process_rewind_blocks=true;  
         process_read_blocks=false;              
-        orphan_read_start=current_block_height-1000;
+        orphan_read_start=current_block_height-50; //only check the last 50 blocks for orphans on every new block to save time -> if the 50ths block back is still orphaned it will rewind in steps of 1000 until equal
         orphan_read_current=orphan_read_start;
         orphan_read_end=current_block_height;
         rewind_blocks_check();                    
