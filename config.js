@@ -1,6 +1,7 @@
 module.exports = function () {
-    //alias.cnf 
+    //alias.cnf
     cnf_host = "localhost";
+    cnf_port = "36657";
     cnf_username = "";
     cnf_password = "";
     cnf_read_block_height = 1700000; //(0 for sync from block 0 or a higher value for quick testing)
