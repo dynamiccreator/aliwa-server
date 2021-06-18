@@ -45,7 +45,6 @@ var global_mempool_j=0;
 //currencies/Alias
 var alias_prices=null;
 
-var request_error_counter=0;
 
 //Create an event handler:
 var mainloop =  async function () {
@@ -338,12 +337,9 @@ function request_rpc(method,params,event,socket,socket_data) {
                 return;
             }
             eventEmitter.emit(event,true,error);
-            request_error_counter++;
-            if(request_error_counter>2){
-                process.exit();
-            }
-        } else {
-            request_error_counter=0;
+            process.exit();                    
+        } else {          
+
 //            console.log("request method: " + method+" | "+params);
 //            console.log('Post successful: body: ', body);
             if(socket!=undefined){
