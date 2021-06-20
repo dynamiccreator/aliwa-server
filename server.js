@@ -248,6 +248,7 @@ io.on('connection', socket => {
         result.sync_id=sync_id;
         result.alias_prices=alias_prices;
         result.server_donation_address=cnf_donation_address;
+        result.server_mode=cnf_server_mode;    
         socket.emit("server_respond_sync_data",result);
         }
         else{
